@@ -271,6 +271,104 @@ python src/evaluate.py \
 - [ ] Web UI demo
 - [ ] DPO alignment for explanation quality
 
+## MLOps Roadmap (GCP)
+
+This section describes the path to a production-grade MLOps system on Google Cloud Platform.
+
+### Maturity Levels
+
+```
+Level 0 (current) → Manual scripts, local GPU
+Level 1            → Reproducible ML pipelines, experiment tracking
+Level 2            → CI/CD for ML, automated retraining & deployment
+```
+
+### Target Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           CI/CD Layer                           │
+│       GitHub → Cloud Build → Artifact Registry → Pipeline      │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────┐
+│                      Data & Experiment Layer                    │
+│    GCS (raw/processed/artifacts)   BigQuery   DVC               │
+│    Vertex AI Experiments (metrics, hyperparams, artifacts)      │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────┐
+│              Training Pipeline (Vertex AI Pipelines)            │
+│                                                                 │
+│  [distill_data] → [build_pairs] → [mine_negatives]             │
+│                                          │                      │
+│                          ┌───────────────┼───────────────┐      │
+│                   [train_bge]   [train_reranker]  [train_llm]  │
+│                          └───────────────┼───────────────┘      │
+│                                    [evaluate]                   │
+│                                          │                      │
+│                              [register → Model Registry]        │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────┐
+│                         Serving Layer                           │
+│   Vertex AI Endpoints (online)   Batch Prediction (batch)       │
+│   Cloud Run (FAISS index API)                                   │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────┐
+│                        Monitoring Layer                         │
+│   Vertex AI Model Monitoring   Cloud Monitoring   Looker Studio │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### GCP Services by Function
+
+| Function | GCP Service | Purpose |
+|----------|------------|---------|
+| Raw data & artifacts | Cloud Storage (GCS) | resumes, JDs, model checkpoints |
+| Structured metrics | BigQuery | eval results, match history, experiment comparison |
+| Data versioning | DVC + GCS backend | track changes to `data/pairs/`, `data/generated/` |
+| Experiment tracking | Vertex AI Experiments | loss curves, hyperparams, Recall@K per run |
+| GPU training jobs | Vertex AI Training (Custom Jobs) | BGE, reranker, QLoRA fine-tuning |
+| Training images | Artifact Registry | versioned Docker images for each training job |
+| Pipeline orchestration | Vertex AI Pipelines (KFP v2) | DAG with caching, retry, conditional steps |
+| Scheduled retraining | Cloud Scheduler | cron-triggered pipeline runs |
+| Model versioning | Vertex AI Model Registry | promote models with eval thresholds |
+| Online inference | Vertex AI Endpoints | real-time JD → candidate matching API |
+| Batch inference | Vertex AI Batch Prediction | periodic full-pool rescoring |
+| FAISS index API | Cloud Run | stateless index serving, loaded from GCS |
+| CI/CD trigger | Cloud Build | PR merge → rebuild image → run pipeline |
+| Data drift detection | Vertex AI Model Monitoring | embedding distribution shift alerts |
+| Dashboards | Looker Studio + BigQuery | matching quality trends, pipeline health |
+
+### Phased Rollout
+
+| Phase | Goal | Key Services |
+|-------|------|-------------|
+| **Phase 1** | Reproducible training | GCS + Vertex AI Training + Experiments |
+| **Phase 2** | Automated pipeline DAG | Vertex AI Pipelines + Model Registry |
+| **Phase 3** | CI/CD integration | Cloud Build + Artifact Registry |
+| **Phase 4** | Production serving | Vertex AI Endpoints + Cloud Run |
+| **Phase 5** | Monitoring & alerting | Model Monitoring + BigQuery + Looker Studio |
+
+### GPU Requirements on GCP
+
+| Training Job | Recommended Instance | Estimated Duration |
+|-------------|---------------------|-------------------|
+| BGE embedding fine-tune | `a2-highgpu-1g` (A100 40GB) | < 1 hr |
+| Cross-encoder reranker | `a2-highgpu-1g` (A100 40GB) | 1–3 hr |
+| QLoRA Qwen2.5-7B | `a2-highgpu-1g` (A100 40GB) | 2–6 hr |
+| Hard negative mining | `n1-standard-8` (CPU) or GPU | < 30 min |
+
+> **Note**: GCP A100 quota is 0 by default. Request an increase via IAM & Admin → Quotas at least 3–5 business days before your training run.
+
+- [ ] Phase 1 — GCS data lake + Vertex AI Training + Experiments
+- [ ] Phase 2 — Vertex AI Pipelines DAG + Model Registry
+- [ ] Phase 3 — Cloud Build CI/CD + Artifact Registry
+- [ ] Phase 4 — Vertex AI Endpoints + Cloud Run serving
+- [ ] Phase 5 — Model Monitoring + BigQuery + Looker Studio dashboards
+
 ## Contributing
 
 Contributions are welcome. Please open an issue first to discuss what you'd like to change.
