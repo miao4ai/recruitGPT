@@ -1,0 +1,280 @@
+# RecruitGPT
+
+An open-source AI recruiting pipeline that combines fine-tuned embeddings, cross-encoder reranking, knowledge graph signals, and LLM reasoning to match candidates with jobs.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+
+---
+
+## How It Works
+
+RecruitGPT is a 5-stage retrieval-augmented matching pipeline. Each stage narrows and refines the candidate pool, ending with a human-readable explanation.
+
+```
+JD / Hiring Query
+        │
+        ▼
+┌───────────────────┐
+│  ① Query Parsing  │  LLM extracts structured intent: skills, seniority,
+│     (Qwen 7B)     │  industry, hard constraints, nice-to-haves
+└────────┬──────────┘
+         │
+         ▼
+┌───────────────────┐
+│  ② Retrieval      │  Fine-tuned BGE encodes query → FAISS ANN search
+│   (BGE-large)     │  over candidate embeddings → Top-K recall
+└────────┬──────────┘
+         │
+         ▼
+┌───────────────────┐
+│  ③ Reranking      │  Cross-encoder scores each (query, candidate) pair
+│  (bge-reranker)   │  with full attention → Top-N precision
+└────────┬──────────┘
+         │
+         ▼
+┌───────────────────┐
+│  ④ Graph Boost    │  Knowledge graph (skills, companies, industries)
+│   (NetworkX)      │  adds structural signals: career similarity,
+│                   │  skill adjacency, company-tier overlap
+└────────┬──────────┘
+         │
+         ▼
+┌───────────────────┐
+│  ⑤ Explanation    │  LLM generates per-candidate match report:
+│     (Qwen 7B)     │  strengths, gaps, interview focus areas
+└───────────────────┘
+```
+
+## Why Fine-tune BGE?
+
+Generic embedding models treat "5 years of distributed systems at a fintech" and "entry-level web developer" as vaguely similar — they're both "software engineering." A fine-tuned BGE model learns the recruiting domain's similarity structure:
+
+- **Seniority matters**: Senior backend ≠ junior backend
+- **Skill overlap is nuanced**: "Kubernetes + Go" is closer to "Docker + Rust" than to "Excel + VBA"
+- **Context changes meaning**: "Python" in a data science JD ≠ "Python" in a DevOps JD
+
+We fine-tune with contrastive learning on (JD, good-match resume, bad-match resume) triplets, including hard negatives mined from the model itself.
+
+## Quick Start
+
+### Installation
+
+```bash
+git clone https://github.com/your-org/recruitGPT.git
+cd recruitGPT
+pip install -r requirements.txt
+```
+
+### Configure API Keys
+
+```bash
+cp .env.example .env
+# Fill in at least one teacher model key (DeepSeek recommended — cheapest, no license issues)
+```
+
+### Step 1 — Generate Training Data via Distillation
+
+A large teacher model (DeepSeek-V3, GPT-4o, or Claude) generates high-quality training data for the smaller student model.
+
+```bash
+# Generate LLM training data (query parsing + match explanation)
+python scripts/distill_data.py \
+    --teacher deepseek \
+    --tasks query_parsing,match_explanation \
+    --num_per_task 500
+
+# Build embedding triplets
+python scripts/build_embedding_pairs.py \
+    --resumes data/resumes/ \
+    --jds data/jds/ \
+    --output data/pairs/train_triplets.jsonl
+
+# Mine hard negatives using current model
+python scripts/mine_hard_negatives.py \
+    --triplets data/pairs/train_triplets.jsonl \
+    --model BAAI/bge-large-zh-v1.5 \
+    --output data/pairs/hard_negatives.jsonl
+
+# Quality filtering
+python scripts/filter_data.py \
+    --input data/generated/train.jsonl \
+    --output data/generated/train_clean.jsonl
+```
+
+### Step 2 — Fine-tune BGE Embedding
+
+```bash
+python src/embedding/train_embedding.py --config configs/bge_finetune.yaml
+```
+
+This trains with InfoNCE loss + in-batch negatives + hard negatives. A single A6000 handles it in under an hour for a few thousand triplets.
+
+### Step 3 — Fine-tune LLM (Query Parsing + Explanation)
+
+```bash
+python src/train.py --config configs/qlora_qwen7b.yaml
+```
+
+QLoRA on Qwen2.5-7B — runs on a single RTX 4090 or A6000.
+
+### Step 4 — Build Index & Run Pipeline
+
+```bash
+# Index your candidate pool
+python src/pipeline/index.py \
+    --resumes data/resumes/ \
+    --model outputs/bge-recruit/
+
+# Interactive matching
+python src/pipeline/match.py \
+    --jd "Your job description here" \
+    --top_k 20 \
+    --interactive
+```
+
+## Project Structure
+
+```
+recruitGPT/
+│
+├── configs/
+│   ├── qlora_qwen7b.yaml              # LLM fine-tuning
+│   ├── qlora_qwen3b.yaml              # LLM low-resource
+│   ├── bge_finetune.yaml              # BGE embedding fine-tuning
+│   └── reranker_finetune.yaml         # Cross-encoder fine-tuning
+│
+├── data/
+│   ├── seed/                          # Hand-written seed examples
+│   ├── pairs/                         # Embedding training triplets
+│   ├── reranker/                      # Reranker training pairs
+│   ├── resumes/                       # Candidate resume corpus
+│   ├── jds/                           # Job description corpus
+│   └── generated/                     # Distilled training data
+│
+├── scripts/
+│   ├── distill_data.py                # Teacher → student data generation
+│   ├── build_embedding_pairs.py       # Build (query, pos, neg) triplets
+│   ├── mine_hard_negatives.py         # Hard negative mining
+│   ├── build_reranker_data.py         # Reranker training data
+│   ├── build_graph.py                 # Knowledge graph construction
+│   ├── filter_data.py                 # Data quality filtering
+│   └── convert_format.py             # Format conversion utility
+│
+├── src/
+│   ├── embedding/                     # Stage ②
+│   │   ├── train_embedding.py         # BGE contrastive fine-tuning
+│   │   ├── eval_embedding.py          # Recall@K, MRR evaluation
+│   │   ├── encode.py                  # Encode & retrieve
+│   │   └── losses.py                  # InfoNCE, triplet loss
+│   │
+│   ├── reranker/                      # Stage ③
+│   │   ├── train_reranker.py          # Cross-encoder fine-tuning
+│   │   ├── eval_reranker.py           # NDCG, MAP evaluation
+│   │   └── rerank.py                  # Reranking inference
+│   │
+│   ├── graph/                         # Stage ④
+│   │   ├── schema.py                  # Graph schema definition
+│   │   ├── builder.py                 # Build skill/company/industry graph
+│   │   └── boost.py                   # Graph signal scoring
+│   │
+│   ├── pipeline/                      # End-to-end pipeline
+│   │   ├── query_parser.py            # Stage ① — LLM query parsing
+│   │   ├── retriever.py               # Stage ② — vector retrieval
+│   │   ├── reranker_stage.py          # Stage ③ — reranking
+│   │   ├── graph_stage.py             # Stage ④ — graph signal
+│   │   ├── explainer.py               # Stage ⑤ — LLM explanation
+│   │   ├── index.py                   # FAISS index management
+│   │   └── match.py                   # Main orchestrator
+│   │
+│   ├── teacher.py                     # Unified teacher model interface
+│   ├── prompts.py                     # All prompt templates
+│   ├── train.py                       # LLM QLoRA training (Unsloth)
+│   ├── evaluate.py                    # LLM-as-Judge evaluation
+│   └── inference.py                   # LLM interactive inference
+│
+├── eval/
+│   ├── eval_set.jsonl                 # LLM evaluation set
+│   └── retrieval_benchmark.jsonl      # Embedding retrieval benchmark
+│
+├── notebooks/
+│   ├── 01_data_exploration.ipynb
+│   ├── 02_embedding_analysis.ipynb
+│   └── 03_pipeline_demo.ipynb
+│
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
+## Models Used
+
+| Component | Base Model | Fine-tune Method | GPU Requirement |
+|-----------|-----------|-----------------|-----------------|
+| Query Parser / Explainer | Qwen2.5-7B-Instruct | QLoRA (4-bit) | 16–24 GB |
+| Embedding | BAAI/bge-large-zh-v1.5 | Contrastive learning | 12–16 GB |
+| Reranker | BAAI/bge-reranker-v2-m3 | Cross-encoder | 12–16 GB |
+| Graph | NetworkX | No training | CPU only |
+
+## Cost Estimate
+
+Assuming you use RunPod or AutoDL for GPU rental:
+
+| Step | Estimated Cost |
+|------|---------------|
+| Distill 3,000 LLM training samples (DeepSeek API) | ~$2–5 |
+| Mine hard negatives + build triplets | ~$1–2 (GPU) |
+| Fine-tune BGE embedding | ~$1–3 (A6000, <1hr) |
+| Fine-tune LLM QLoRA | ~$3–8 (A6000, 2–6hr) |
+| **Total** | **~$7–18** |
+
+## Evaluation
+
+### Embedding Retrieval
+
+```bash
+python src/embedding/eval_embedding.py \
+    --model outputs/bge-recruit/ \
+    --eval_data data/pairs/eval_triplets.jsonl
+# Outputs: Recall@10, Recall@50, MRR
+```
+
+### Reranker
+
+```bash
+python src/reranker/eval_reranker.py \
+    --model outputs/reranker/ \
+    --eval_data data/reranker/eval.jsonl
+# Outputs: NDCG@5, NDCG@10, MAP
+```
+
+### LLM (Judge-based)
+
+```bash
+python src/evaluate.py \
+    --model_path outputs/qwen7b-recruit/merged \
+    --eval_data eval/eval_set.jsonl \
+    --judge deepseek
+# Outputs: Accuracy, Format, Professionalism, Usefulness (1–5 scale)
+```
+
+## Roadmap
+
+- [x] LLM distillation pipeline (query parsing + explanation)
+- [x] BGE embedding fine-tuning with hard negative mining
+- [x] Cross-encoder reranker
+- [x] Skill/company knowledge graph
+- [ ] Multi-language support (EN/ZH/JA)
+- [ ] Resume PDF parsing (OCR + layout)
+- [ ] Real-time indexing API
+- [ ] Web UI demo
+- [ ] DPO alignment for explanation quality
+
+## Contributing
+
+Contributions are welcome. Please open an issue first to discuss what you'd like to change.
+
+## License
+
+[MIT](LICENSE)
