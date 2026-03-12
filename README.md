@@ -194,6 +194,9 @@ recruitGPT/
 │   ├── evaluate.py                    # LLM-as-Judge evaluation
 │   └── inference.py                   # LLM interactive inference
 │
+├── docs/
+│   └── cloud_infra.md                 # Cloud infrastructure guide (GCS, Vertex AI, serving)
+│
 ├── eval/
 │   ├── eval_set.jsonl                 # LLM evaluation set
 │   └── retrieval_benchmark.jsonl      # Embedding retrieval benchmark
