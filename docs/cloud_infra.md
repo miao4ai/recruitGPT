@@ -108,13 +108,29 @@ python scripts/distill_data.py \
 - Recommended instance: `1 vCPU, 2 GB RAM`
 - Estimated runtime: 30–60 min for 3,000 samples
 
+### Token volume estimate (3,000 samples)
+
+| Task | Samples | Input tokens/sample | Output tokens/sample | Total |
+|------|---------|--------------------|--------------------|-------|
+| Query Parsing | 1,500 | ~650 (prompt + JD) | ~200 (JSON) | 975K in + 300K out |
+| Match Explanation | 1,500 | ~1,350 (prompt + JD + resume) | ~400 (report) | 2.0M in + 600K out |
+| **Total** | **3,000** | | | **~3M in + 900K out** |
+
+Match Explanation accounts for ~70% of cost due to the longer input context (JD + resume combined).
+
 ### API cost estimate
 
-| Teacher | ~3,000 samples | Notes |
-|---------|---------------|-------|
-| DeepSeek-V3 | ~$2–5 | Cheapest, recommended |
-| GPT-4o-mini | ~$4–8 | Good quality/cost balance |
-| Claude Haiku | ~$3–6 | Fast, good JSON adherence |
+| Teacher | Input price/M | Output price/M | ~3,000 samples (standard) | Batch mode (50% off) |
+|---------|--------------|---------------|--------------------------|---------------------|
+| **DeepSeek-V3** | $0.27 | $1.10 | **~$1.8** | ~$0.9 |
+| GPT-4o-mini | $0.15 | $0.60 | **~$1.0** | ~$0.5 |
+| Claude Haiku | $0.80 | $4.00 | **~$6.0** | ~$3.0 |
+| **Claude Sonnet 4.6** | $3.00 | $15.00 | **~$22.5** | **~$11** (Batch API) |
+| GPT-4o | $2.50 | $10.00 | **~$16.5** | ~$8 |
+
+> Prices as of March 2026. Always verify at the provider's pricing page before running.
+
+**Recommendation:** Use **DeepSeek-V3** for cost efficiency. If higher output quality is needed (e.g., for match explanations), use **Claude Sonnet via Batch API** (~$11) — distillation data generation is non-realtime and qualifies for batch processing.
 
 ### Data format (stored in GCS as jsonl)
 
