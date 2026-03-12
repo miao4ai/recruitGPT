@@ -17,7 +17,7 @@ JD / Hiring Query
         ▼
 ┌───────────────────┐
 │  ① Query Parsing  │  LLM extracts structured intent: skills, seniority,
-│     (Qwen 7B)     │  industry, hard constraints, nice-to-haves
+│  (Qwen3.5 0.8B)  │  industry, hard constraints, nice-to-haves
 └────────┬──────────┘
          │
          ▼
@@ -42,7 +42,7 @@ JD / Hiring Query
          ▼
 ┌───────────────────┐
 │  ⑤ Explanation    │  LLM generates per-candidate match report:
-│     (Qwen 7B)     │  strengths, gaps, interview focus areas
+│  (Qwen3.5 0.8B)  │  strengths, gaps, interview focus areas
 └───────────────────┘
 ```
 
@@ -113,10 +113,10 @@ This trains with InfoNCE loss + in-batch negatives + hard negatives. A single A6
 ### Step 3 — Fine-tune LLM (Query Parsing + Explanation)
 
 ```bash
-python src/train.py --config configs/qlora_qwen7b.yaml
+python src/train.py --config configs/qlora_qwen3_5_0_8b.yaml
 ```
 
-QLoRA on Qwen2.5-7B — runs on a single RTX 4090 or A6000.
+QLoRA on Qwen3.5-0.8B — runs on any GPU with 6–8 GB VRAM (RTX 3060, T4, etc.). Merge LoRA weights after training for faster inference.
 
 ### Step 4 — Build Index & Run Pipeline
 
@@ -139,8 +139,9 @@ python src/pipeline/match.py \
 recruitGPT/
 │
 ├── configs/
-│   ├── qlora_qwen7b.yaml              # LLM fine-tuning
-│   ├── qlora_qwen3b.yaml              # LLM low-resource
+│   ├── qlora_qwen3_5_0_8b.yaml        # LLM fine-tuning (student model)
+│   ├── qlora_qwen7b.yaml              # LLM fine-tuning (teacher reference)
+│   ├── qlora_qwen3b.yaml              # LLM low-resource alternative
 │   ├── bge_finetune.yaml              # BGE embedding fine-tuning
 │   └── reranker_finetune.yaml         # Cross-encoder fine-tuning
 │
@@ -212,10 +213,13 @@ recruitGPT/
 
 | Component | Base Model | Fine-tune Method | GPU Requirement |
 |-----------|-----------|-----------------|-----------------|
-| Query Parser / Explainer | Qwen2.5-7B-Instruct | QLoRA (4-bit) | 16–24 GB |
+| Query Parser | Qwen/Qwen3.5-0.8B-Instruct | QLoRA (4-bit) | 6–8 GB |
+| Explainer (optional) | Qwen/Qwen3.5-0.8B-Instruct | QLoRA (4-bit) | 6–8 GB |
 | Embedding | BAAI/bge-large-zh-v1.5 | Contrastive learning | 12–16 GB |
 | Reranker | BAAI/bge-reranker-v2-m3 | Cross-encoder | 12–16 GB |
 | Graph | NetworkX | No training | CPU only |
+
+> **Teacher models** (for distillation data generation only): DeepSeek-V3, GPT-4o, or Claude via API.
 
 ## Cost Estimate
 
@@ -226,7 +230,7 @@ Assuming you use RunPod or AutoDL for GPU rental:
 | Distill 3,000 LLM training samples (DeepSeek API) | ~$2–5 |
 | Mine hard negatives + build triplets | ~$1–2 (GPU) |
 | Fine-tune BGE embedding | ~$1–3 (A6000, <1hr) |
-| Fine-tune LLM QLoRA | ~$3–8 (A6000, 2–6hr) |
+| Fine-tune LLM QLoRA (Qwen3.5-0.8B) | ~$0.5–2 (T4/A10G, <1hr) |
 | **Total** | **~$7–18** |
 
 ## Evaluation
@@ -253,7 +257,7 @@ python src/reranker/eval_reranker.py \
 
 ```bash
 python src/evaluate.py \
-    --model_path outputs/qwen7b-recruit/merged \
+    --model_path outputs/qwen3_5_0_8b-recruit/merged \
     --eval_data eval/eval_set.jsonl \
     --judge deepseek
 # Outputs: Accuracy, Format, Professionalism, Usefulness (1–5 scale)
@@ -358,7 +362,7 @@ Level 2            → CI/CD for ML, automated retraining & deployment
 |-------------|---------------------|-------------------|
 | BGE embedding fine-tune | `a2-highgpu-1g` (A100 40GB) | < 1 hr |
 | Cross-encoder reranker | `a2-highgpu-1g` (A100 40GB) | 1–3 hr |
-| QLoRA Qwen2.5-7B | `a2-highgpu-1g` (A100 40GB) | 2–6 hr |
+| QLoRA Qwen3.5-0.8B | `n1-standard-4` + T4 (16GB) | < 1 hr |
 | Hard negative mining | `n1-standard-8` (CPU) or GPU | < 30 min |
 
 > **Note**: GCP A100 quota is 0 by default. Request an increase via IAM & Admin → Quotas at least 3–5 business days before your training run.
