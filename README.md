@@ -195,7 +195,8 @@ recruitGPT/
 │   └── inference.py                   # LLM interactive inference
 │
 ├── docs/
-│   └── cloud_infra.md                 # Cloud infrastructure guide (GCS, Vertex AI, serving)
+│   ├── cloud_infra.md                 # Cloud infrastructure guide (GCS, Vertex AI, serving)
+│   └── cloud_run_deploy.md            # Cloud Run Job deployment guide
 │
 ├── eval/
 │   ├── eval_set.jsonl                 # LLM evaluation set
