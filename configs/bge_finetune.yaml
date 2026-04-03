@@ -1,1 +1,37 @@
-# TODO
+# BGE-M3 embedding fine-tuning config
+# Multilingual (EN/ZH/JA) dense retrieval for candidate matching
+# GPU requirement: 12–16 GB VRAM (A10G / L4 / RTX 4090)
+
+model:
+  name: BAAI/bge-m3
+  max_seq_length: 512        # enough for structured queries + resume chunks
+  pooling: cls               # BGE uses [CLS] pooling
+
+data:
+  train_file: data/pairs/train_triplets.jsonl
+  hard_negatives: data/pairs/hard_negatives.jsonl   # optional, from mine_hard_negatives.py
+  eval_file: eval/retrieval_benchmark.jsonl
+
+training:
+  output_dir: outputs/bge-m3-recruit
+  num_train_epochs: 3
+  per_device_train_batch_size: 16
+  gradient_accumulation_steps: 2     # effective batch = 32
+  learning_rate: 1e-5
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  bf16: true
+  logging_steps: 10
+  eval_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 2
+  load_best_model_at_end: true
+  metric_for_best_model: eval_loss
+  report_to: none
+  seed: 42
+
+loss:
+  type: InfoNCE                 # contrastive loss with in-batch negatives
+  temperature: 0.02
+  use_in_batch_negatives: true  # treat other positives in batch as negatives

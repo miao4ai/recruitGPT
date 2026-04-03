@@ -109,7 +109,7 @@ python scripts/build_embedding_pairs.py \
 # Mine hard negatives using current model
 python scripts/mine_hard_negatives.py \
     --triplets data/pairs/train_triplets.jsonl \
-    --model BAAI/bge-large-zh-v1.5 \
+    --model BAAI/bge-m3 \
     --output data/pairs/hard_negatives.jsonl
 
 # Quality filtering
@@ -235,7 +235,7 @@ recruitGPT/
 |-----------|-----------|-----------------|-----------------|
 | Query Parser | Qwen/Qwen3.5-0.8B-Instruct | QLoRA (4-bit) | 6–8 GB |
 | Explainer (optional) | Qwen/Qwen3.5-0.8B-Instruct | QLoRA (4-bit) | 6–8 GB |
-| Embedding | BAAI/bge-large-zh-v1.5 | Contrastive learning | 12–16 GB |
+| Embedding | BAAI/bge-m3 | Contrastive learning (EN/ZH/JA) | 12–16 GB |
 | Reranker | BAAI/bge-reranker-v2-m3 | Cross-encoder | 12–16 GB |
 | Graph | NetworkX | No training | CPU only |
 
