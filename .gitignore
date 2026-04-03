@@ -1,1 +1,38 @@
-# TODO
+# Secrets
+.env
+*.key
+*.pem
+credentials*.json
+service-account*.json
+
+# GCP
+gcp_config.yaml
+
+# Data outputs (large files)
+data/jds/*.jsonl
+data/resumes/*.jsonl
+data/generated/*.jsonl
+data/pairs/*.jsonl
+data/reranker/*.jsonl
+data/graph/*.gpickle
+outputs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

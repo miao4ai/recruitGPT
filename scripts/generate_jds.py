@@ -32,6 +32,7 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 
 ROLES = {
+    # --- Tech ---
     "backend": [
         "Backend Engineer", "Senior Backend Engineer", "Staff Backend Engineer",
         "Platform Engineer", "API Engineer", "Distributed Systems Engineer",
@@ -62,12 +63,70 @@ ROLES = {
     "management": [
         "Engineering Manager", "Tech Lead", "Director of Engineering",
     ],
+    # --- Finance ---
+    "finance": [
+        "Financial Analyst", "Senior Financial Analyst", "Investment Banking Analyst",
+        "Portfolio Manager", "Risk Analyst", "Compliance Officer",
+        "Accountant", "Senior Accountant", "Controller", "FP&A Manager",
+    ],
+    # --- Healthcare ---
+    "healthcare": [
+        "Registered Nurse", "Nurse Practitioner", "ICU Nurse",
+        "Physician Assistant", "Medical Technologist", "Clinical Research Coordinator",
+        "Pharmacist", "Physical Therapist", "Occupational Therapist",
+    ],
+    # --- Trades / Skilled Labor ---
+    "trades": [
+        "Electrician", "Master Electrician", "Plumber", "HVAC Technician",
+        "Welder", "CNC Machinist", "Industrial Maintenance Technician",
+        "Construction Project Manager", "Site Supervisor",
+    ],
+    # --- Sales & Marketing ---
+    "sales": [
+        "Account Executive", "Senior Account Executive", "Sales Development Representative",
+        "Enterprise Sales Manager", "Customer Success Manager",
+        "Solutions Engineer", "Sales Operations Manager",
+    ],
+    "marketing": [
+        "Marketing Manager", "Digital Marketing Specialist", "Content Strategist",
+        "SEO Specialist", "Growth Marketing Manager", "Brand Manager",
+        "Social Media Manager",
+    ],
+    # --- Operations & Logistics ---
+    "operations": [
+        "Operations Manager", "Supply Chain Manager", "Logistics Coordinator",
+        "Warehouse Manager", "Procurement Specialist", "Quality Assurance Manager",
+    ],
+    # --- Legal ---
+    "legal": [
+        "Corporate Counsel", "Paralegal", "Compliance Manager",
+        "Contract Manager", "IP Attorney", "Legal Operations Manager",
+    ],
+    # --- HR ---
+    "hr": [
+        "HR Business Partner", "Talent Acquisition Specialist", "Recruiter",
+        "Compensation & Benefits Analyst", "HR Manager", "People Operations Manager",
+    ],
+    # --- Education ---
+    "education": [
+        "Teacher", "Curriculum Designer", "Instructional Designer",
+        "Academic Advisor", "Training Manager", "Corporate Trainer",
+    ],
 }
 
 INDUSTRIES = [
+    # Tech
     "Fintech", "E-commerce", "HealthTech", "EdTech", "SaaS / B2B",
     "Gaming", "Social Media", "Logistics / Supply Chain", "Cybersecurity",
     "AI / Machine Learning", "Climate Tech", "HR Tech",
+    # Non-tech
+    "Banking / Financial Services", "Insurance", "Investment Management",
+    "Hospital / Health System", "Pharmaceutical", "Biotech",
+    "Construction", "Manufacturing", "Energy / Utilities",
+    "Retail", "Real Estate", "Legal Services",
+    "Government / Public Sector", "Nonprofit",
+    "Consulting", "Media / Entertainment", "Hospitality / Travel",
+    "Telecommunications", "Agriculture / Food Tech",
 ]
 
 SENIORITY_LEVELS = ["junior", "mid", "senior", "staff", "lead", "manager"]
@@ -76,6 +135,7 @@ COMPANY_SIZES = ["early-stage startup (20–50 people)", "Series B startup (100�
                  "growth-stage company (500–1000 people)", "large tech company (1000+ people)"]
 
 SKILL_POOLS = {
+    # --- Tech ---
     "backend": ["Go", "Python", "Java", "Rust", "Node.js", "PostgreSQL", "MySQL",
                 "Redis", "Kafka", "gRPC", "REST API", "Kubernetes", "Docker",
                 "AWS", "GCP", "microservices", "distributed systems"],
@@ -93,6 +153,44 @@ SKILL_POOLS = {
                "Android SDK", "REST API", "CI/CD", "App Store"],
     "management": ["team building", "technical roadmap", "cross-functional collaboration",
                    "Agile", "mentorship", "OKRs", "hiring"],
+    # --- Finance ---
+    "finance": ["financial modeling", "Excel", "Bloomberg Terminal", "SQL",
+                "risk management", "derivatives", "GAAP", "IFRS", "valuation",
+                "M&A", "budgeting", "forecasting", "SAP", "QuickBooks"],
+    # --- Healthcare ---
+    "healthcare": ["patient care", "EMR/EHR", "HIPAA compliance", "BLS/ACLS",
+                   "medication administration", "clinical assessment", "triage",
+                   "care coordination", "medical terminology", "IV therapy",
+                   "wound care", "patient education"],
+    # --- Trades ---
+    "trades": ["NEC code", "blueprint reading", "electrical wiring", "PLC programming",
+               "OSHA safety", "welding (MIG/TIG)", "CNC programming", "AutoCAD",
+               "HVAC systems", "plumbing codes", "project estimation",
+               "preventive maintenance", "lockout/tagout"],
+    # --- Sales ---
+    "sales": ["Salesforce", "CRM management", "pipeline management", "cold outreach",
+              "consultative selling", "contract negotiation", "account management",
+              "revenue forecasting", "SaaS sales", "enterprise sales cycle"],
+    # --- Marketing ---
+    "marketing": ["Google Analytics", "SEO/SEM", "content marketing", "email marketing",
+                  "social media management", "HubSpot", "copywriting", "A/B testing",
+                  "marketing automation", "brand strategy", "paid media"],
+    # --- Operations ---
+    "operations": ["supply chain management", "inventory management", "ERP systems",
+                   "lean manufacturing", "Six Sigma", "vendor management",
+                   "warehouse management", "logistics planning", "KPI tracking"],
+    # --- Legal ---
+    "legal": ["contract drafting", "legal research", "regulatory compliance",
+              "corporate governance", "IP law", "litigation support",
+              "due diligence", "Westlaw/LexisNexis", "risk assessment"],
+    # --- HR ---
+    "hr": ["talent acquisition", "HRIS", "employee relations", "compensation analysis",
+            "performance management", "onboarding", "labor law", "diversity & inclusion",
+            "benefits administration", "Workday", "ADP"],
+    # --- Education ---
+    "education": ["curriculum development", "instructional design", "LMS platforms",
+                  "assessment design", "classroom management", "differentiated instruction",
+                  "student engagement", "educational technology", "accreditation"],
 }
 
 SYSTEM_PROMPT = """You are an expert recruiter and technical writer.
@@ -173,7 +271,7 @@ def main():
     parser.add_argument(
         "--roles",
         type=str,
-        default="backend,frontend,data,infra,product,mobile",
+        default="backend,frontend,data,infra,product,mobile,finance,healthcare,trades,sales,marketing,operations,legal,hr,education",
         help="Comma-separated role categories to include",
     )
     parser.add_argument("--output", type=str, default="data/jds/", help="Output directory")

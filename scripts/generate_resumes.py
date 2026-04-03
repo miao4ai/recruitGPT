@@ -36,6 +36,7 @@ MODEL = "claude-sonnet-4-6"
 # ---------------------------------------------------------------
 
 ROLE_TITLES = {
+    # --- Tech ---
     "backend": [
         "Backend Engineer", "Senior Backend Engineer", "Staff Engineer",
         "Platform Engineer", "Software Engineer", "Senior Software Engineer",
@@ -63,6 +64,54 @@ ROLE_TITLES = {
     "management": [
         "Engineering Manager", "Tech Lead", "Senior Engineering Manager",
     ],
+    # --- Finance ---
+    "finance": [
+        "Financial Analyst", "Senior Financial Analyst", "Investment Analyst",
+        "Portfolio Manager", "Risk Analyst", "Accountant", "Senior Accountant",
+        "FP&A Manager", "Controller",
+    ],
+    # --- Healthcare ---
+    "healthcare": [
+        "Registered Nurse", "Nurse Practitioner", "ICU Nurse",
+        "Physician Assistant", "Pharmacist", "Physical Therapist",
+        "Medical Technologist", "Clinical Research Coordinator",
+    ],
+    # --- Trades ---
+    "trades": [
+        "Electrician", "Master Electrician", "Plumber", "HVAC Technician",
+        "Welder", "CNC Machinist", "Maintenance Technician",
+        "Construction Project Manager", "Site Supervisor",
+    ],
+    # --- Sales ---
+    "sales": [
+        "Account Executive", "Senior Account Executive", "Sales Development Rep",
+        "Enterprise Sales Manager", "Customer Success Manager", "Solutions Engineer",
+    ],
+    # --- Marketing ---
+    "marketing": [
+        "Marketing Manager", "Digital Marketing Specialist", "Content Strategist",
+        "SEO Specialist", "Growth Marketing Manager", "Brand Manager",
+    ],
+    # --- Operations ---
+    "operations": [
+        "Operations Manager", "Supply Chain Manager", "Logistics Coordinator",
+        "Warehouse Manager", "Procurement Specialist",
+    ],
+    # --- Legal ---
+    "legal": [
+        "Corporate Counsel", "Paralegal", "Compliance Manager",
+        "Contract Manager", "Legal Operations Manager",
+    ],
+    # --- HR ---
+    "hr": [
+        "HR Business Partner", "Talent Acquisition Specialist", "Recruiter",
+        "HR Manager", "People Operations Manager",
+    ],
+    # --- Education ---
+    "education": [
+        "Teacher", "Curriculum Designer", "Instructional Designer",
+        "Training Manager", "Corporate Trainer",
+    ],
 }
 
 COMPANIES = {
@@ -82,6 +131,22 @@ COMPANIES = {
         "a Series A startup", "a Series B SaaS company",
         "an early-stage fintech startup", "a growth-stage e-commerce company",
     ],
+    "finance": [
+        "Goldman Sachs", "JP Morgan", "Morgan Stanley", "BlackRock",
+        "Deloitte", "PwC", "EY", "KPMG", "Citadel", "Bridgewater",
+    ],
+    "healthcare": [
+        "Mayo Clinic", "Kaiser Permanente", "Cleveland Clinic",
+        "Johns Hopkins Hospital", "HCA Healthcare", "Pfizer", "Johnson & Johnson",
+    ],
+    "trades": [
+        "Turner Construction", "Bechtel", "Fluor Corporation",
+        "AECOM", "a regional electrical contractor", "a commercial HVAC company",
+    ],
+    "general": [
+        "Walmart", "Target", "Costco", "McKinsey", "BCG",
+        "Salesforce", "HubSpot", "Nike", "Disney", "Marriott",
+    ],
 }
 
 UNIVERSITIES = [
@@ -91,8 +156,25 @@ UNIVERSITIES = [
     "University of Michigan", "Georgia Tech", "Columbia University",
 ]
 
-DEGREES = ["B.S. Computer Science", "B.Eng. Software Engineering",
-           "M.S. Computer Science", "B.S. Mathematics", "M.S. Data Science"]
+DEGREES = {
+    "default": ["B.S. Computer Science", "B.Eng. Software Engineering",
+                "M.S. Computer Science", "B.S. Mathematics", "M.S. Data Science"],
+    "finance": ["B.S. Finance", "B.S. Economics", "MBA", "M.S. Financial Engineering",
+                "B.S. Accounting", "CFA Charterholder"],
+    "healthcare": ["B.S.N. Nursing", "M.S.N. Nursing", "Doctor of Nursing Practice",
+                   "Pharm.D.", "B.S. Biology", "DPT Physical Therapy"],
+    "trades": ["Journeyman Electrician License", "Associate Degree — Electrical Technology",
+               "HVAC Certification", "Welding Certification", "B.S. Construction Management"],
+    "sales": ["B.A. Business Administration", "B.S. Marketing", "MBA"],
+    "marketing": ["B.A. Marketing", "B.A. Communications", "M.S. Digital Marketing", "MBA"],
+    "operations": ["B.S. Supply Chain Management", "B.S. Industrial Engineering",
+                   "MBA — Operations", "Six Sigma Black Belt"],
+    "legal": ["J.D.", "B.A. Political Science", "LL.M.", "Paralegal Certificate"],
+    "hr": ["B.A. Human Resources", "B.S. Psychology", "MBA — HR Management",
+            "SHRM-CP Certification"],
+    "education": ["B.A. Education", "M.Ed.", "Ed.D.", "Teaching Credential",
+                  "M.A. Curriculum & Instruction"],
+}
 
 NAMES = [
     "Alex Chen", "Jamie Liu", "Sam Park", "Jordan Wang", "Taylor Zhang",
@@ -104,7 +186,7 @@ NAMES = [
 ]
 
 SYSTEM_PROMPT = """\
-You are generating realistic synthetic LinkedIn profiles for software engineering candidates.
+You are generating realistic synthetic LinkedIn profiles for professionals across all industries.
 Write profiles that read like real LinkedIn pages — specific, varied, and credible.
 Include real-sounding company names, project details, and quantified achievements.
 Do not use generic filler phrases like "passionate about technology" or "team player".\
@@ -149,6 +231,7 @@ Rules:
 """
 
 SKILL_POOLS = {
+    # --- Tech ---
     "backend": ["Go", "Python", "Java", "Rust", "Node.js", "PostgreSQL", "MySQL",
                 "Redis", "Kafka", "gRPC", "Kubernetes", "Docker", "AWS", "GCP",
                 "microservices", "distributed systems", "REST API"],
@@ -164,6 +247,42 @@ SKILL_POOLS = {
                "Android SDK", "REST API", "CI/CD"],
     "management": ["team building", "technical roadmap", "Agile", "mentorship",
                    "hiring", "OKRs", "cross-functional collaboration"],
+    # --- Finance ---
+    "finance": ["financial modeling", "Excel", "Bloomberg Terminal", "SQL",
+                "risk management", "GAAP", "IFRS", "valuation", "budgeting",
+                "forecasting", "SAP", "M&A"],
+    # --- Healthcare ---
+    "healthcare": ["patient care", "EMR/EHR", "HIPAA", "BLS/ACLS",
+                   "medication administration", "clinical assessment", "triage",
+                   "care coordination", "IV therapy", "wound care"],
+    # --- Trades ---
+    "trades": ["NEC code", "blueprint reading", "electrical wiring", "PLC programming",
+               "OSHA safety", "welding (MIG/TIG)", "CNC programming", "AutoCAD",
+               "HVAC systems", "plumbing codes", "preventive maintenance"],
+    # --- Sales ---
+    "sales": ["Salesforce", "CRM", "pipeline management", "cold outreach",
+              "consultative selling", "contract negotiation", "account management",
+              "revenue forecasting", "SaaS sales"],
+    # --- Marketing ---
+    "marketing": ["Google Analytics", "SEO/SEM", "content marketing", "HubSpot",
+                  "copywriting", "A/B testing", "marketing automation",
+                  "social media management", "paid media"],
+    # --- Operations ---
+    "operations": ["supply chain management", "ERP systems", "lean manufacturing",
+                   "Six Sigma", "vendor management", "logistics planning",
+                   "inventory management", "KPI tracking"],
+    # --- Legal ---
+    "legal": ["contract drafting", "legal research", "regulatory compliance",
+              "corporate governance", "litigation support", "due diligence",
+              "Westlaw/LexisNexis", "risk assessment"],
+    # --- HR ---
+    "hr": ["talent acquisition", "HRIS", "employee relations", "compensation analysis",
+            "performance management", "labor law", "Workday", "ADP",
+            "diversity & inclusion", "onboarding"],
+    # --- Education ---
+    "education": ["curriculum development", "instructional design", "LMS platforms",
+                  "assessment design", "classroom management", "educational technology",
+                  "student engagement", "differentiated instruction"],
 }
 
 
@@ -179,12 +298,25 @@ def build_spec(role_category: str) -> dict:
     else:
         years_exp = random.randint(1, 4)
 
-    # Pick 2 previous companies
-    all_companies = (
-        COMPANIES["tier1_tech"] + COMPANIES["tier2_tech"] +
-        COMPANIES["fintech"] + COMPANIES["startup"]
+    # Pick 2 previous companies — match industry to role category
+    CATEGORY_COMPANY_POOLS = {
+        "finance": ["finance", "general"],
+        "healthcare": ["healthcare", "general"],
+        "trades": ["trades", "general"],
+        "sales": ["general", "tier2_tech", "fintech"],
+        "marketing": ["general", "tier2_tech"],
+        "operations": ["general", "trades"],
+        "legal": ["finance", "general"],
+        "hr": ["general", "tier1_tech", "tier2_tech"],
+        "education": ["general"],
+    }
+    pools = CATEGORY_COMPANY_POOLS.get(
+        role_category, ["tier1_tech", "tier2_tech", "fintech", "startup"]
     )
-    companies = random.sample(all_companies, k=2)
+    all_companies = []
+    for pool in pools:
+        all_companies.extend(COMPANIES.get(pool, []))
+    companies = random.sample(all_companies, k=min(2, len(all_companies)))
 
     skills = random.sample(SKILL_POOLS.get(role_category, SKILL_POOLS["backend"]), k=6)
 
@@ -194,7 +326,7 @@ def build_spec(role_category: str) -> dict:
         "years_exp": years_exp,
         "companies": " and ".join(companies),
         "university": random.choice(UNIVERSITIES),
-        "degree": random.choice(DEGREES),
+        "degree": random.choice(DEGREES.get(role_category, DEGREES["default"])),
         "role_category": role_category,
         "skills": ", ".join(skills),
     }
