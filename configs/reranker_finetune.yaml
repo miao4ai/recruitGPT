@@ -1,1 +1,31 @@
-# TODO
+# Cross-encoder reranker fine-tuning config
+# Base model: BGE Reranker V2 M3 (multilingual EN/ZH/JA)
+# GPU requirement: 12–16 GB VRAM (A10G / L4 / RTX 4090)
+
+model:
+  name: BAAI/bge-reranker-v2-m3
+  max_seq_length: 512
+
+data:
+  train_file: data/reranker/train.jsonl
+  eval_file: data/reranker/eval.jsonl
+
+training:
+  output_dir: outputs/reranker-recruit
+  num_train_epochs: 3
+  per_device_train_batch_size: 16
+  per_device_eval_batch_size: 32
+  gradient_accumulation_steps: 2      # effective batch = 32
+  learning_rate: 5e-6
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  bf16: true
+  logging_steps: 10
+  eval_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 2
+  load_best_model_at_end: true
+  metric_for_best_model: eval_loss
+  report_to: none
+  seed: 42
