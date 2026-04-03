@@ -93,11 +93,20 @@ def load_existing_ids(output_path: Path) -> set[str]:
 # ---------------------------------------------------------------
 
 def call_claude(client: anthropic.Anthropic, messages: list[dict]) -> str:
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=1024,
-        messages=messages,
-    )
+    # Claude API requires system as a top-level param, not in messages
+    system = None
+    filtered = []
+    for msg in messages:
+        if msg["role"] == "system":
+            system = msg["content"]
+        else:
+            filtered.append(msg)
+
+    kwargs = {"model": MODEL, "max_tokens": 1024, "messages": filtered}
+    if system:
+        kwargs["system"] = system
+
+    response = client.messages.create(**kwargs)
     return response.content[0].text.strip()
 
 
