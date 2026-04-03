@@ -308,6 +308,15 @@ def main():
 
     for i, spec in enumerate(specs):
         jd_id = f"jd_{i+1:04d}"
+        jd_file = output_dir / f"{jd_id}.json"
+
+        # Skip if already exists
+        if jd_file.exists():
+            with open(jd_file) as f:
+                generated.append(json.load(f))
+            print(f"[{i+1}/{len(specs)}] {jd_id} — skip (exists)")
+            continue
+
         try:
             text = generate_jd(client, spec)
             record = {
@@ -321,7 +330,7 @@ def main():
             generated.append(record)
 
             # Write individual file
-            with open(output_dir / f"{jd_id}.json", "w") as f:
+            with open(jd_file, "w") as f:
                 json.dump(record, f, ensure_ascii=False, indent=2)
 
             print(f"[{i+1}/{len(specs)}] {jd_id}: {spec['role']} @ {spec['industry']}")

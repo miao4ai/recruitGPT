@@ -360,7 +360,7 @@ def main():
     parser.add_argument(
         "--roles",
         type=str,
-        default="backend,frontend,data,infra,product,mobile",
+        default="backend,frontend,data,infra,product,mobile,finance,healthcare,trades,sales,marketing,operations,legal,hr,education",
         help="Comma-separated role categories",
     )
     parser.add_argument("--output", type=str, default="data/resumes/")
@@ -395,6 +395,15 @@ def main():
 
     for i, spec in enumerate(specs):
         resume_id = f"resume_{i+1:04d}"
+        resume_file = output_dir / f"{resume_id}.json"
+
+        # Skip if already exists
+        if resume_file.exists():
+            with open(resume_file) as f:
+                generated.append(json.load(f))
+            print(f"[{i+1}/{len(specs)}] {resume_id} — skip (exists)")
+            continue
+
         try:
             text = generate_resume(client, spec)
             record = {
@@ -408,7 +417,7 @@ def main():
             }
             generated.append(record)
 
-            with open(output_dir / f"{resume_id}.json", "w") as f:
+            with open(resume_file, "w") as f:
                 json.dump(record, f, ensure_ascii=False, indent=2)
 
             print(f"[{i+1}/{len(specs)}] {resume_id}: {spec['name']} — {spec['current_title']}")
