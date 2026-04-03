@@ -1,6 +1,6 @@
 # RecruitGPT
 
-An open-source AI recruiting pipeline that combines fine-tuned embeddings, cross-encoder reranking, knowledge graph signals, and LLM reasoning to match candidates with jobs.
+An open-source AI recruiting pipeline that combines fine-tuned embeddings, cross-encoder reranking, knowledge graph signals, and LLM reasoning to match candidates with jobs — across tech and non-tech roles (finance, healthcare, trades, sales, legal, and more).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -53,6 +53,7 @@ Generic embedding models treat "5 years of distributed systems at a fintech" and
 - **Seniority matters**: Senior backend ≠ junior backend
 - **Skill overlap is nuanced**: "Kubernetes + Go" is closer to "Docker + Rust" than to "Excel + VBA"
 - **Context changes meaning**: "Python" in a data science JD ≠ "Python" in a DevOps JD
+- **Cross-domain awareness**: "risk management" in finance ≠ "risk management" in construction
 
 We fine-tune with contrastive learning on (JD, good-match resume, bad-match resume) triplets, including hard negatives mined from the model itself.
 
@@ -72,6 +73,21 @@ pip install -r requirements.txt
 cp .env.example .env
 # Fill in at least one teacher model key (DeepSeek recommended — cheapest, no license issues)
 ```
+
+### Step 0 — Generate Synthetic Raw Data
+
+Generate diverse JDs and resumes across 15+ role categories (backend, finance, healthcare, trades, sales, etc.):
+
+```bash
+# All categories (tech + non-tech)
+python scripts/generate_jds.py --num 200 --output data/jds/
+python scripts/generate_resumes.py --num 200 --output data/resumes/
+
+# Or specific categories only
+python scripts/generate_jds.py --num 50 --roles "finance,healthcare,trades"
+```
+
+Supported role categories: `backend`, `frontend`, `data`, `infra`, `product`, `design`, `mobile`, `management`, `finance`, `healthcare`, `trades`, `sales`, `marketing`, `operations`, `legal`, `hr`, `education`
 
 ### Step 1 — Generate Training Data via Distillation
 
